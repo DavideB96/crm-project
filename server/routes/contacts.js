@@ -1,0 +1,94 @@
+const router = require('express').Router();
+const pool = require('../config/db');
+
+// GET tutti i contatti (con nome azienda)
+router.get('/', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT contacts.*, companies.name AS company_name
+       FROM contacts
+       LEFT JOIN companies ON contacts.company_id = companies.id
+       ORDER BY contacts.created_at DESC`
+    );
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET singolo contatto per id
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      `SELECT contacts.*, companies.name AS company_name
+       FROM contacts
+       LEFT JOIN companies ON contacts.company_id = companies.id
+       WHERE contacts.id = $1`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Contatto non trovato' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST crea nuovo contatto
+router.post('/', async (req, res) => {
+  try {
+    const { first_name, last_name, email, phone, role, company_id } = req.body;
+    const result = await pool.query(
+      'INSERT INTO contacts (first_name, last_name, email, phone, role, company_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [first_name, last_name, email, phone, role, company_id]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// PUT modifica contatto
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { first_name, last_name, email, phone, role, company_id } = req.body;
+    const result = await pool.query(
+      'UPDATE contacts SET first_name = $1, last_name = $2, email = $3, phone = $4, role = $5, company_id = $6 WHERE id = $7 RETURNING *',
+      [first_name, last_name, email, phone, role, company_id, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Contatto non trovato' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE elimina contatto
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      'DELETE FROM contacts WHERE id = $1 RETURNING *',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Contatto non trovato' });
+    }
+
+    res.json({ message: 'Contatto eliminato con successo' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+module.exports = router;
