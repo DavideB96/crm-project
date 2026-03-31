@@ -131,7 +131,7 @@ function Companies() {
           onClose={() => setNotification(null)}
         />
       )}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
         <h1 className="text-3xl font-bold text-gray-800">Companies</h1>
         <div className="flex items-center gap-3">
           <input
