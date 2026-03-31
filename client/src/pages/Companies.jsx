@@ -131,16 +131,9 @@ function Companies() {
           onClose={() => setNotification(null)}
         />
       )}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Companies</h1>
-        <div className="flex items-center gap-3">
-          <input
-            type="text"
-            placeholder="Search..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-36 sm:w-auto px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-800 focus:border-transparent bg-slate-50 text-sm"
-          />
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-3xl font-bold text-gray-800">Companies</h1>
           <button
             onClick={() => setShowForm(true)}
             className="bg-slate-800 text-white rounded-xl hover:bg-slate-700 transition-all flex items-center gap-2 px-3 py-2 sm:px-4"
@@ -149,6 +142,13 @@ function Companies() {
             <span className="hidden sm:inline text-sm font-medium">New Company</span>
           </button>
         </div>
+        <input
+          type="text"
+          placeholder="Search..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full sm:w-64 px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-800 focus:border-transparent bg-slate-50 text-sm"
+        />
       </div>
 
       {showForm && (
