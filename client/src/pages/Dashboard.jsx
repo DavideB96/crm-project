@@ -22,15 +22,15 @@ function Dashboard() {
     try {
       const [companiesRes, contactsRes] = await Promise.all([
         api.get('/companies'),
-        api.get('/contacts'),
+        api.get('/contacts?limit=5'),
       ]);
 
       setStats({
-        companies: companiesRes.data.length,
-        contacts: contactsRes.data.length,
+        companies: companiesRes.data.total,
+        contacts: contactsRes.data.total,
       });
 
-      setRecentContacts(contactsRes.data.slice(0, 5));
+      setRecentContacts(contactsRes.data.data);
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {
