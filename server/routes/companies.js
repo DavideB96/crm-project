@@ -1,11 +1,56 @@
 const router = require('express').Router();
 const pool = require('../config/db');
 
-// GET tutte le aziende
+// GET aziende con paginazione e ricerca
 router.get('/', async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search || '';
+    const offset = (page - 1) * limit;
+
+    let whereClause = '';
+    let queryParams = [];
+
+    if (search) {
+      whereClause = `WHERE name ILIKE $1 
+        OR industry ILIKE $1 
+        OR email ILIKE $1`;
+      queryParams = [`%${search}%`];
+    }
+
+    // Query per il totale
+    const countResult = await pool.query(
+      `SELECT COUNT(*) FROM companies ${whereClause}`,
+      queryParams
+    );
+    const total = parseInt(countResult.rows[0].count);
+
+    // Query per i dati paginati
+    const dataResult = await pool.query(
+      `SELECT * FROM companies 
+       ${whereClause} 
+       ORDER BY created_at DESC 
+       LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}`,
+      [...queryParams, limit, offset]
+    );
+
+    res.json({
+      data: dataResult.rows,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET tutte le aziende (senza paginazione, per dropdown)
+router.get('/all', async (req, res) => {
+  try {
     const result = await pool.query(
-      'SELECT * FROM companies ORDER BY created_at DESC'
+      'SELECT id, name FROM companies ORDER BY name ASC'
     );
     res.json(result.rows);
   } catch (error) {

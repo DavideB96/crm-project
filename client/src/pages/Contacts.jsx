@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Notification from '../components/Notifications';
 import api from '../services/api';
 
@@ -11,6 +12,10 @@ function Contacts() {
     const [editingContact, setEditingContact] = useState(null);
     const [notification, setNotification] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [searchValue, setSearchValue] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [total, setTotal] = useState(0);
     const [formData, setFormData] = useState({
         first_name: '',
         last_name: '',
@@ -20,28 +25,56 @@ function Contacts() {
         company_id: '',
     });
 
-    useEffect(() => {
-        fetchContacts();
-        fetchCompanies();
-    }, []);
+    const limit = 10;
+    const navigate = useNavigate();
 
-    const fetchContacts = async () => {
+    const fetchContacts = useCallback(async (page, search) => {
         try {
-            const response = await api.get('/contacts');
-            setContacts(response.data);
+            setLoading(true);
+            const response = await api.get(`/contacts?page=${page}&limit=${limit}&search=${search}`);
+            setContacts(response.data.data);
+            setTotalPages(response.data.totalPages);
+            setTotal(response.data.total);
+            setCurrentPage(response.data.page);
         } catch (error) {
             console.error('Error loading contacts:', error);
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     const fetchCompanies = async () => {
         try {
-            const response = await api.get('/companies');
+            const response = await api.get('/companies/all');
             setCompanies(response.data);
         } catch (error) {
             console.error('Error loading companies:', error);
+        }
+    };
+
+    // Caricamento iniziale
+    useEffect(() => {
+        fetchContacts(1, '');
+        fetchCompanies();
+    }, [fetchContacts]);
+
+    // Debounce sulla ricerca: aspetta 300ms dopo l'ultima digitazione
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setSearchTerm(searchValue);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchValue]);
+
+    // Quando cambia il termine di ricerca, torna a pagina 1
+    useEffect(() => {
+        setCurrentPage(1);
+        fetchContacts(1, searchTerm);
+    }, [searchTerm, fetchContacts]);
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            fetchContacts(newPage, searchTerm);
         }
     };
 
@@ -89,7 +122,7 @@ function Contacts() {
             setShowForm(false);
             setEditingContact(null);
             setFormData({ first_name: '', last_name: '', email: '', phone: '', role: '', company_id: '' });
-            fetchContacts();
+            fetchContacts(currentPage, searchTerm);
         } catch {
             setNotification({ message: 'Error saving contact', type: 'error' });
         }
@@ -113,7 +146,7 @@ function Contacts() {
             try {
                 await api.delete(`/contacts/${id}`);
                 setNotification({ message: 'Contact deleted successfully!', type: 'success' });
-                fetchContacts();
+                fetchContacts(currentPage, searchTerm);
             } catch {
                 setNotification({ message: 'Error deleting contact', type: 'error' });
             }
@@ -127,22 +160,6 @@ function Contacts() {
         setFormErrors({});
     };
 
-    const filteredContacts = contacts.filter((contact) => {
-        const search = searchTerm.toLowerCase();
-        return (
-            contact.first_name.toLowerCase().includes(search) ||
-            contact.last_name.toLowerCase().includes(search) ||
-            (contact.email && contact.email.toLowerCase().includes(search)) ||
-            (contact.company_name && contact.company_name.toLowerCase().includes(search))
-        );
-    });
-
-    if (loading) {
-        return (
-            <div className="p-6 text-center text-gray-500">Loading...</div>
-        );
-    }
-
     return (
         <div className="p-6 max-w-7xl mx-auto">
             {notification && (
@@ -154,7 +171,9 @@ function Contacts() {
             )}
             <div className="mb-6">
                 <div className="flex justify-between items-center mb-4">
-                    <h1 className="text-3xl font-bold text-gray-800">Contacts</h1>
+                    <h1 className="text-3xl font-bold text-gray-800">
+                        Contacts {total > 0 && <span className="text-lg font-normal text-gray-500">({total})</span>}
+                    </h1>
                     <button
                         onClick={() => setShowForm(true)}
                         className="bg-slate-800 text-white rounded-xl hover:bg-slate-700 transition-all flex items-center gap-2 px-3 py-2 sm:px-4"
@@ -166,8 +185,8 @@ function Contacts() {
                 <input
                     type="text"
                     placeholder="Search..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
                     className="w-full sm:w-64 px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-800 focus:border-transparent bg-slate-50 text-sm"
                 />
             </div>
@@ -294,52 +313,93 @@ function Contacts() {
                 </div>
             )}
 
-            {filteredContacts.length === 0 ? (
+            {loading ? (
+                <div className="p-6 text-center text-gray-500">Loading...</div>
+            ) : contacts.length === 0 ? (
                 <div className="bg-white p-6 rounded-lg shadow-md text-center text-gray-500">
-                    No contacts found. Click "New Contact" to add one!
+                    {searchTerm ? 'No contacts match your search.' : 'No contacts found. Click "New Contact" to add one!'}
                 </div>
             ) : (
-                <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                    <table className="w-full">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">First Name</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                            {filteredContacts.map((contact) => (
-                                <tr key={contact.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 font-medium text-gray-900">
-                                        {contact.first_name} {contact.last_name}
-                                    </td>
-                                    <td className="px-6 py-4 text-gray-600">{contact.email}</td>
-                                    <td className="px-6 py-4 text-gray-600">{contact.phone}</td>
-                                    <td className="px-6 py-4 text-gray-600">{contact.role}</td>
-                                    <td className="px-6 py-4 text-gray-600">{contact.company_name || '-'}</td>
-                                    <td className="px-6 py-4">
-                                        <button
-                                            onClick={() => handleEdit(contact)}
-                                            className="text-blue-600 hover:text-blue-800 mr-3"
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(contact.id)}
-                                            className="text-red-600 hover:text-red-800"
-                                        >
-                                            Delete
-                                        </button>
-                                    </td>
+                <>
+                    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                        <table className="w-full">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200">
+                                {contacts.map((contact) => (
+                                    <tr
+                                        key={contact.id}
+                                        onClick={() => navigate(`/contacts/${contact.id}`)}
+                                        className="hover:bg-slate-50 cursor-pointer transition-colors"
+                                    >
+                                        <td className="px-6 py-4 font-medium text-slate-800">
+                                            {contact.first_name} {contact.last_name}
+                                        </td>
+                                        <td className="px-6 py-4 text-gray-600">{contact.email}</td>
+                                        <td className="px-6 py-4 text-gray-600">{contact.phone}</td>
+                                        <td className="px-6 py-4 text-gray-600">{contact.role}</td>
+                                        <td className="px-6 py-4 text-gray-600">{contact.company_name || '-'}</td>
+                                        <td className="px-6 py-4">
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleEdit(contact); }}
+                                                className="text-blue-600 hover:text-blue-800 mr-3"
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleDelete(contact.id); }}
+                                                className="text-red-600 hover:text-red-800"
+                                            >
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Paginazione */}
+                    {totalPages > 1 && (
+                        <div className="flex justify-between items-center mt-4 px-2">
+                            <p className="text-sm text-gray-500">
+                                Page {currentPage} of {totalPages} — {total} contacts
+                            </p>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => handlePageChange(currentPage - 1)}
+                                    disabled={currentPage === 1}
+                                    className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+                                        currentPage === 1
+                                            ? 'border-gray-200 text-gray-300 cursor-not-allowed'
+                                            : 'border-slate-300 text-slate-700 hover:bg-slate-100'
+                                    }`}
+                                >
+                                    ← Prev
+                                </button>
+                                <button
+                                    onClick={() => handlePageChange(currentPage + 1)}
+                                    disabled={currentPage === totalPages}
+                                    className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+                                        currentPage === totalPages
+                                            ? 'border-gray-200 text-gray-300 cursor-not-allowed'
+                                            : 'border-slate-300 text-slate-700 hover:bg-slate-100'
+                                    }`}
+                                >
+                                    Next →
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );

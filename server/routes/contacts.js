@@ -1,16 +1,52 @@
 const router = require('express').Router();
 const pool = require('../config/db');
 
-// GET tutti i contatti (con nome azienda)
+// GET contatti con paginazione e ricerca
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query(
-      `SELECT contacts.*, companies.name AS company_name
-       FROM contacts
-       LEFT JOIN companies ON contacts.company_id = companies.id
-       ORDER BY contacts.created_at DESC`
-    );
-    res.json(result.rows);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search || '';
+    const offset = (page - 1) * limit;
+
+    // Condizione di ricerca
+    let whereClause = '';
+    let queryParams = [];
+
+    if (search) {
+      whereClause = `WHERE contacts.first_name ILIKE $1 
+        OR contacts.last_name ILIKE $1 
+        OR contacts.email ILIKE $1 
+        OR companies.name ILIKE $1`;
+      queryParams = [`%${search}%`];
+    }
+
+    // Query per il totale
+    const countQuery = `
+      SELECT COUNT(*) FROM contacts 
+      LEFT JOIN companies ON contacts.company_id = companies.id 
+      ${whereClause}
+    `;
+    const countResult = await pool.query(countQuery, queryParams);
+    const total = parseInt(countResult.rows[0].count);
+
+    // Query per i dati paginati
+    const dataQuery = `
+      SELECT contacts.*, companies.name AS company_name
+      FROM contacts
+      LEFT JOIN companies ON contacts.company_id = companies.id
+      ${whereClause}
+      ORDER BY contacts.created_at DESC
+      LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}
+    `;
+    const dataResult = await pool.query(dataQuery, [...queryParams, limit, offset]);
+
+    res.json({
+      data: dataResult.rows,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

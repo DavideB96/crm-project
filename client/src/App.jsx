@@ -5,6 +5,8 @@ import Dashboard from './pages/Dashboard';
 import Companies from './pages/Companies';
 import Contacts from './pages/Contacts';
 import Navbar from './components/navbar';
+import ContactDetail from './pages/ContactDetail';
+import Footer from './components/Footer';
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -12,10 +14,13 @@ function ProtectedRoute({ children }) {
     return <Navigate to="/login" />;
   }
   return (
-    <>
+    <div className="min-h-screen flex flex-col">
       <Navbar />
-      {children}
-    </>
+      <main className="flex-1">
+        {children}
+      </main>
+      <Footer />
+    </div>
   );
 }
 
@@ -33,6 +38,9 @@ function App() {
         } />
         <Route path="/contacts" element={
           <ProtectedRoute><Contacts /></ProtectedRoute>
+        } />
+        <Route path="/contacts/:id" element={
+          <ProtectedRoute><ContactDetail /></ProtectedRoute>
         } />
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>

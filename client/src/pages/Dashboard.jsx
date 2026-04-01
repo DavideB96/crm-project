@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
 function Dashboard() {
@@ -11,6 +11,8 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const user = JSON.parse(localStorage.getItem('user'));
   const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchDashboardData();
@@ -115,7 +117,11 @@ function Dashboard() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {recentContacts.map((contact) => (
-                  <tr key={contact.id} className="hover:bg-slate-50 transition-colors">
+                  <tr
+                    key={contact.id}
+                    onClick={() => navigate(`/contacts/${contact.id}`)}
+                    className="hover:bg-slate-50 cursor-pointer transition-colors"
+                  >
                     <td className="px-6 py-4 font-medium text-slate-800">
                       {contact.first_name} {contact.last_name}
                     </td>
