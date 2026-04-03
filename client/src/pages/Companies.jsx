@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import Notification from '../components/Notifications';
 import api from '../services/api';
@@ -25,6 +26,7 @@ function Companies() {
   });
 
   const limit = 10;
+  const navigate = useNavigate();
 
   const fetchCompanies = useCallback(async (page, search, sort = sortBy, order = sortOrder) => {
     try {
@@ -268,7 +270,8 @@ function Companies() {
         </div>
       ) : (
         <>
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          {/* Tabella desktop */}
+          <div className="hidden md:block bg-white rounded-lg shadow-md overflow-hidden">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
@@ -298,20 +301,24 @@ function Companies() {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {companies.map((company) => (
-                  <tr key={company.id} className="hover:bg-gray-50">
+                  <tr
+                    key={company.id}
+                    onClick={() => navigate(`/companies/${company.id}`)}
+                    className="hover:bg-gray-50 cursor-pointer transition-colors"
+                  >
                     <td className="px-6 py-4 font-medium text-gray-900">{company.name}</td>
                     <td className="px-6 py-4 text-gray-600">{company.industry}</td>
                     <td className="px-6 py-4 text-gray-600">{company.email}</td>
                     <td className="px-6 py-4 text-gray-600">{company.phone}</td>
                     <td className="px-6 py-4">
                       <button
-                        onClick={() => handleEdit(company)}
+                        onClick={(e) => { e.stopPropagation(); handleEdit(company); }}
                         className="text-blue-600 hover:text-blue-800 mr-3"
                       >
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDelete(company.id)}
+                        onClick={(e) => { e.stopPropagation(); handleDelete(company.id); }}
                         className="text-red-600 hover:text-red-800"
                       >
                         Delete
@@ -321,6 +328,27 @@ function Companies() {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Card view mobile */}
+          <div className="md:hidden space-y-3">
+            {companies.map((company) => (
+              <div
+                key={company.id}
+                onClick={() => navigate(`/companies/${company.id}`)}
+                className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 cursor-pointer hover:shadow-md hover:border-slate-300 transition-all active:bg-slate-50"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-semibold text-slate-800">{company.name}</p>
+                    <p className="text-sm text-slate-500 mt-1">
+                      {company.industry || 'No industry'}
+                    </p>
+                  </div>
+                  <span className="text-slate-400 text-lg">›</span>
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Paginazione */}
