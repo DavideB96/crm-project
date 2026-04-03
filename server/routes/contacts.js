@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const pool = require('../config/db');
+const { requireAdmin } = require('../middleware/auth');
 
 // GET contatti con paginazione e ricerca
 router.get('/', async (req, res) => {
@@ -115,7 +116,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE elimina contatto
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query(

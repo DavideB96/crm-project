@@ -27,6 +27,7 @@ function Companies() {
 
   const limit = 10;
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('user'));
 
   const fetchCompanies = useCallback(async (page, search, sort = sortBy, order = sortOrder) => {
     try {
@@ -317,12 +318,14 @@ function Companies() {
                       >
                         Edit
                       </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleDelete(company.id); }}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        Delete
-                      </button>
+                      {user?.role === 'admin' && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDelete(company.id); }}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          Delete
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

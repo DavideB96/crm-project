@@ -6,6 +6,7 @@ import api from '../services/api';
 function CompanyDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const user = JSON.parse(localStorage.getItem('user'));
     const [company, setCompany] = useState(null);
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState(false);
@@ -131,12 +132,14 @@ function CompanyDetail() {
                                 >
                                     Edit
                                 </button>
+                                {user?.role === 'admin' && (
                                 <button
                                     onClick={handleDelete}
                                     className="border border-red-300 text-red-600 px-4 py-1.5 rounded-lg text-sm hover:bg-red-50 transition-colors"
                                 >
                                     Delete
                                 </button>
+                                )}
                             </>
                         )}
                     </div>

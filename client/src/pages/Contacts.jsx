@@ -29,6 +29,7 @@ function Contacts() {
 
     const limit = 10;
     const navigate = useNavigate();
+    const user = JSON.parse(localStorage.getItem('user'));
 
     const fetchContacts = useCallback(async (page, search, sort = sortBy, order = sortOrder) => {
         try {
@@ -381,12 +382,14 @@ function Contacts() {
                                             >
                                                 Edit
                                             </button>
+                                            {user?.role === 'admin' && (
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); handleDelete(contact.id); }}
                                                 className="text-red-600 hover:text-red-800"
                                             >
                                                 Delete
                                             </button>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}
