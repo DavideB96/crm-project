@@ -36,7 +36,7 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 flex flex-col items-center justify-center px-4">
       <div className="bg-white p-8 sm:p-10 rounded-2xl shadow-2xl w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 bg-slate-800 rounded-xl mb-4">
@@ -107,6 +107,11 @@ function Login() {
           </Link>
         </p>
       </div>
+
+      <p className="mt-6 text-slate-400 text-xs">
+        © {new Date().getFullYear()} · Built by{' '}
+        <a href="https://davideb96.github.io/EnPortfolio/" target="_blank" rel="noopener noreferrer" className="text-slate-300 hover:text-white underline underline-offset-2 transition-colors">Davide B.</a>
+      </p>
     </div>
   );
 }
