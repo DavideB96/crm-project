@@ -330,7 +330,8 @@ function Contacts() {
                 </div>
             ) : (
                 <>
-                    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                    {/* Tabella desktop */}
+                    <div className="hidden md:block bg-white rounded-lg shadow-md overflow-hidden">
                         <table className="w-full">
                             <thead className="bg-gray-50">
                                 <tr>
@@ -391,6 +392,29 @@ function Contacts() {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+
+                    {/* Card view mobile */}
+                    <div className="md:hidden space-y-3">
+                        {contacts.map((contact) => (
+                            <div
+                                key={contact.id}
+                                onClick={() => navigate(`/contacts/${contact.id}`)}
+                                className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 cursor-pointer hover:shadow-md hover:border-slate-300 transition-all active:bg-slate-50"
+                            >
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <p className="font-semibold text-slate-800">
+                                            {contact.first_name} {contact.last_name}
+                                        </p>
+                                        <p className="text-sm text-slate-500 mt-1">
+                                            {contact.role || 'No role'} {contact.company_name ? `· ${contact.company_name}` : ''}
+                                        </p>
+                                    </div>
+                                    <span className="text-slate-400 text-lg">›</span>
+                                </div>
+                            </div>
+                        ))}
                     </div>
 
                     {/* Paginazione */}
