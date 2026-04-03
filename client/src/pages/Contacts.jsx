@@ -16,6 +16,8 @@ function Contacts() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [total, setTotal] = useState(0);
+    const [sortBy, setSortBy] = useState('created_at');
+    const [sortOrder, setSortOrder] = useState('desc');
     const [formData, setFormData] = useState({
         first_name: '',
         last_name: '',
@@ -28,10 +30,10 @@ function Contacts() {
     const limit = 10;
     const navigate = useNavigate();
 
-    const fetchContacts = useCallback(async (page, search) => {
+    const fetchContacts = useCallback(async (page, search, sort = sortBy, order = sortOrder) => {
         try {
             setLoading(true);
-            const response = await api.get(`/contacts?page=${page}&limit=${limit}&search=${search}`);
+            const response = await api.get(`/contacts?page=${page}&limit=${limit}&search=${search}&sortBy=${sort}&sortOrder=${order}`);
             setContacts(response.data.data);
             setTotalPages(response.data.totalPages);
             setTotal(response.data.total);
@@ -41,7 +43,7 @@ function Contacts() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [sortBy, sortOrder]);
 
     const fetchCompanies = async () => {
         try {
@@ -76,6 +78,13 @@ function Contacts() {
         if (newPage >= 1 && newPage <= totalPages) {
             fetchContacts(newPage, searchTerm);
         }
+    };
+
+    const handleSort = (column) => {
+        const newOrder = sortBy === column && sortOrder === 'asc' ? 'desc' : 'asc';
+        setSortBy(column);
+        setSortOrder(newOrder);
+        fetchContacts(1, searchTerm, column, newOrder);
     };
 
     const handleChange = (e) => {
@@ -325,11 +334,27 @@ function Contacts() {
                         <table className="w-full">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company</th>
+                                    {[
+                                        { key: 'name', label: 'Name' },
+                                        { key: 'industry', label: 'Industry' },
+                                        { key: 'email', label: 'Email' },
+                                        { key: 'phone', label: 'Phone' },
+                                    ].map(({ key, label }) => (
+                                        <th
+                                            key={key}
+                                            onClick={() => handleSort(key)}
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700 hover:bg-gray-100 transition-colors select-none"
+                                        >
+                                            <span className="flex items-center gap-1">
+                                                {label}
+                                                {sortBy === key ? (
+                                                    <span className="text-slate-800 font-bold">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                                                ) : (
+                                                    <span className="text-gray-300">↕</span>
+                                                )}
+                                            </span>
+                                        </th>
+                                    ))}
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                                 </tr>
                             </thead>
@@ -377,22 +402,20 @@ function Contacts() {
                                 <button
                                     onClick={() => handlePageChange(currentPage - 1)}
                                     disabled={currentPage === 1}
-                                    className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
-                                        currentPage === 1
-                                            ? 'border-gray-200 text-gray-300 cursor-not-allowed'
-                                            : 'border-slate-300 text-slate-700 hover:bg-slate-100'
-                                    }`}
+                                    className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${currentPage === 1
+                                        ? 'border-gray-200 text-gray-300 cursor-not-allowed'
+                                        : 'border-slate-300 text-slate-700 hover:bg-slate-100'
+                                        }`}
                                 >
                                     ← Prev
                                 </button>
                                 <button
                                     onClick={() => handlePageChange(currentPage + 1)}
                                     disabled={currentPage === totalPages}
-                                    className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
-                                        currentPage === totalPages
-                                            ? 'border-gray-200 text-gray-300 cursor-not-allowed'
-                                            : 'border-slate-300 text-slate-700 hover:bg-slate-100'
-                                    }`}
+                                    className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${currentPage === totalPages
+                                        ? 'border-gray-200 text-gray-300 cursor-not-allowed'
+                                        : 'border-slate-300 text-slate-700 hover:bg-slate-100'
+                                        }`}
                                 >
                                     Next →
                                 </button>

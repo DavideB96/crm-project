@@ -7,7 +7,12 @@ router.get('/', async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const search = req.query.search || '';
+    const sortBy = req.query.sortBy || 'created_at';
+    const sortOrder = req.query.sortOrder === 'asc' ? 'ASC' : 'DESC';
     const offset = (page - 1) * limit;
+
+    const allowedSortColumns = ['name', 'industry', 'email', 'phone', 'created_at'];
+    const safeSortBy = allowedSortColumns.includes(sortBy) ? sortBy : 'created_at';
 
     let whereClause = '';
     let queryParams = [];
@@ -30,7 +35,7 @@ router.get('/', async (req, res) => {
     const dataResult = await pool.query(
       `SELECT * FROM companies 
        ${whereClause} 
-       ORDER BY created_at DESC 
+       ORDER BY ${safeSortBy} ${sortOrder} 
        LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}`,
       [...queryParams, limit, offset]
     );

@@ -7,7 +7,13 @@ router.get('/', async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const search = req.query.search || '';
+    const sortBy = req.query.sortBy || 'created_at';
+    const sortOrder = req.query.sortOrder === 'asc' ? 'ASC' : 'DESC';
     const offset = (page - 1) * limit;
+
+    // Colonne consentite per evitare SQL injection
+    const allowedSortColumns = ['first_name', 'last_name', 'email', 'phone', 'role', 'company_name', 'created_at'];
+    const safeSortBy = allowedSortColumns.includes(sortBy) ? sortBy : 'created_at';
 
     // Condizione di ricerca
     let whereClause = '';
@@ -36,7 +42,7 @@ router.get('/', async (req, res) => {
       FROM contacts
       LEFT JOIN companies ON contacts.company_id = companies.id
       ${whereClause}
-      ORDER BY contacts.created_at DESC
+      ORDER BY ${safeSortBy === 'company_name' ? 'companies.name' : 'contacts.' + safeSortBy} ${sortOrder}
       LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}
     `;
     const dataResult = await pool.query(dataQuery, [...queryParams, limit, offset]);
