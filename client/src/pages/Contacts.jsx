@@ -335,10 +335,11 @@ function Contacts() {
                             <thead className="bg-gray-50">
                                 <tr>
                                     {[
-                                        { key: 'name', label: 'Name' },
-                                        { key: 'industry', label: 'Industry' },
+                                        { key: 'first_name', label: 'Name' },
                                         { key: 'email', label: 'Email' },
                                         { key: 'phone', label: 'Phone' },
+                                        { key: 'role', label: 'Role' },
+                                        { key: 'company_name', label: 'Company' },
                                     ].map(({ key, label }) => (
                                         <th
                                             key={key}

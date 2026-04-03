@@ -14,6 +14,8 @@ function Companies() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [sortBy, setSortBy] = useState('created_at');
+  const [sortOrder, setSortOrder] = useState('desc');
   const [formData, setFormData] = useState({
     name: '',
     industry: '',
@@ -24,10 +26,10 @@ function Companies() {
 
   const limit = 10;
 
-  const fetchCompanies = useCallback(async (page, search) => {
+  const fetchCompanies = useCallback(async (page, search, sort = sortBy, order = sortOrder) => {
     try {
       setLoading(true);
-      const response = await api.get(`/companies?page=${page}&limit=${limit}&search=${search}`);
+      const response = await api.get(`/companies?page=${page}&limit=${limit}&search=${search}&sortBy=${sort}&sortOrder=${order}`);
       setCompanies(response.data.data);
       setTotalPages(response.data.totalPages);
       setTotal(response.data.total);
@@ -37,7 +39,7 @@ function Companies() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [sortBy, sortOrder]);
 
   // Caricamento iniziale
   useEffect(() => {
@@ -62,6 +64,13 @@ function Companies() {
     if (newPage >= 1 && newPage <= totalPages) {
       fetchCompanies(newPage, searchTerm);
     }
+  };
+
+  const handleSort = (column) => {
+    const newOrder = sortBy === column && sortOrder === 'asc' ? 'desc' : 'asc';
+    setSortBy(column);
+    setSortOrder(newOrder);
+    fetchCompanies(1, searchTerm, column, newOrder);
   };
 
   const handleChange = (e) => {
@@ -182,9 +191,8 @@ function Companies() {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none ${
-                    formErrors.name ? 'border-red-500' : 'border-gray-300 focus:border-blue-500'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none ${formErrors.name ? 'border-red-500' : 'border-gray-300 focus:border-blue-500'
+                    }`}
                 />
                 {formErrors.name && <p className="text-red-500 text-sm mt-1">{formErrors.name}</p>}
               </div>
@@ -205,9 +213,8 @@ function Companies() {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none ${
-                    formErrors.email ? 'border-red-500' : 'border-gray-300 focus:border-blue-500'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none ${formErrors.email ? 'border-red-500' : 'border-gray-300 focus:border-blue-500'
+                    }`}
                 />
                 {formErrors.email && <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>}
               </div>
@@ -218,9 +225,8 @@ function Companies() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none ${
-                    formErrors.phone ? 'border-red-500' : 'border-gray-300 focus:border-blue-500'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none ${formErrors.phone ? 'border-red-500' : 'border-gray-300 focus:border-blue-500'
+                    }`}
                 />
                 {formErrors.phone && <p className="text-red-500 text-sm mt-1">{formErrors.phone}</p>}
               </div>
@@ -266,10 +272,27 @@ function Companies() {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Industry</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+                  {[
+                    { key: 'name', label: 'Name' },
+                    { key: 'industry', label: 'Industry' },
+                    { key: 'email', label: 'Email' },
+                    { key: 'phone', label: 'Phone' },
+                  ].map(({ key, label }) => (
+                    <th
+                      key={key}
+                      onClick={() => handleSort(key)}
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700 hover:bg-gray-100 transition-colors select-none"
+                    >
+                      <span className="flex items-center gap-1">
+                        {label}
+                        {sortBy === key ? (
+                          <span className="text-slate-800 font-bold">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                        ) : (
+                          <span className="text-gray-300">↕</span>
+                        )}
+                      </span>
+                    </th>
+                  ))}
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                 </tr>
               </thead>
@@ -310,22 +333,20 @@ function Companies() {
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
-                    currentPage === 1
-                      ? 'border-gray-200 text-gray-300 cursor-not-allowed'
-                      : 'border-slate-300 text-slate-700 hover:bg-slate-100'
-                  }`}
+                  className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${currentPage === 1
+                    ? 'border-gray-200 text-gray-300 cursor-not-allowed'
+                    : 'border-slate-300 text-slate-700 hover:bg-slate-100'
+                    }`}
                 >
                   ← Prev
                 </button>
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
-                    currentPage === totalPages
-                      ? 'border-gray-200 text-gray-300 cursor-not-allowed'
-                      : 'border-slate-300 text-slate-700 hover:bg-slate-100'
-                  }`}
+                  className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${currentPage === totalPages
+                    ? 'border-gray-200 text-gray-300 cursor-not-allowed'
+                    : 'border-slate-300 text-slate-700 hover:bg-slate-100'
+                    }`}
                 >
                   Next →
                 </button>
