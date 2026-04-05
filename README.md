@@ -1,111 +1,130 @@
-# CRM - Customer Relationship Management
+# CRM — Customer Relationship Management
 
-A full-stack CRM web application built to manage companies and contacts with authentication, built from real-world experience working in contact center environments.
+A full-stack CRM web application for managing companies, contacts, and users — built with React, Node.js, and PostgreSQL. Features role-based access control, server-side pagination, sortable tables, and a responsive mobile-first design.
+
+🔗 **Live Demo:** [crm-project-theta-six.vercel.app](https://crm-project-theta-six.vercel.app)
+
+📁 **Portfolio:** [davideb96.github.io/EnPortfolio](https://davideb96.github.io/EnPortfolio/)
+
+---
 
 ## Live Preview
 
-<img width="950" height="476" alt="CRM-Project2" src="https://github.com/user-attachments/assets/20badefd-2a03-47bb-990c-4244d1d43453" />
+<img width="954" height="476" alt="Preview Crm-project" src="https://github.com/user-attachments/assets/dc04d73c-f874-45a4-bd65-d0fd9a1b4c61" />
 
 
 ## Features
 
-- **Authentication** — Secure registration and login with JWT tokens
-- **Companies Management** — Full CRUD operations for managing client companies
-- **Contacts Management** — Full CRUD with company association via relational database
-- **Dashboard** — Overview with real-time statistics and recent contacts
-- **Search & Filter** — Real-time search across companies and contacts
-- **Form Validation** — Client-side validation with visual error feedback
-- **Notifications** — Success/error toast notifications on all operations
-- **Responsive Design** — Mobile-first design with hamburger menu navigation
-- **Protected Routes** — Frontend route guards and backend middleware authentication
+**Authentication & Security**
+- JWT-based registration and login with hashed passwords (bcrypt)
+- Automatic token expiration handling with redirect to login
+- Role-based access control (Admin / Operator)
+- Protected routes on both frontend and backend
+
+**Companies & Contacts Management**
+- Full CRUD operations for companies and contacts
+- Contacts linked to companies via relational foreign keys
+- Detail pages with inline editing for both companies and contacts
+- Client-side form validation with visual error feedback
+
+**Data Handling**
+- Server-side pagination with configurable page size
+- Server-side search with PostgreSQL `ILIKE` and debounced input (300ms)
+- Sortable table columns (click header to toggle ASC/DESC)
+- Dashboard with real-time statistics and recent contacts
+
+**Admin Panel**
+- User management interface (visible only to admins)
+- Change user roles (admin ↔ operator) via dropdown
+- Delete users with confirmation (admins cannot delete themselves)
+- Self-protection: admins cannot change their own role
+
+**UI & Responsive Design**
+- Mobile-first responsive layout with Tailwind CSS
+- Card view on mobile, table view on desktop
+- Hamburger menu with overlay dismiss
+- Toast notifications (success/error) with auto-dismiss
+- Footer with dynamic copyright year and portfolio link
+
+---
 
 ## Tech Stack
 
-### Frontend
-- React 18
-- React Router DOM
-- Axios
-- Tailwind CSS
-- Vite
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 18, React Router, Axios, Tailwind CSS, Vite |
+| Backend | Node.js, Express.js |
+| Database | PostgreSQL |
+| Auth | JWT (jsonwebtoken), bcrypt.js |
+| Deployment | Vercel (frontend), Render (backend + database) |
 
-### Backend
-- Node.js
-- Express.js
-- PostgreSQL
-- JSON Web Tokens (JWT)
-- bcrypt.js
+---
 
 ## Project Structure
+
 ```
 crm-project/
-├── client/                 # React Frontend
+├── client/                     # React Frontend
 │   └── src/
-│       ├── components/     # Reusable components (Navbar, Notification)
-│       ├── pages/          # Page components (Login, Dashboard, etc.)
-│       └── services/       # API service with Axios interceptors
+│       ├── components/         # Navbar, Footer, Notifications
+│       ├── pages/              # Login, Register, Dashboard, Companies,
+│       │                         Contacts, ContactDetail, CompanyDetail,
+│       │                         AdminPanel
+│       └── services/           # Axios instance with request/response
+│                                 interceptors
 │
-├── server/                 # Node.js Backend
-│   ├── config/             # Database connection (PostgreSQL pool)
-│   ├── middleware/          # JWT authentication middleware
-│   └── routes/             # REST API routes (auth, companies, contacts)
+├── server/                     # Node.js Backend
+│   ├── config/                 # PostgreSQL pool (SSL conditional)
+│   ├── middleware/             # JWT auth + role-based access middleware
+│   └── routes/                 # REST API (auth, companies, contacts, users)
 │
 └── README.md
 ```
 
-## Database Schema
-
-The application uses three relational tables:
-
-- **users** — Authentication with hashed passwords and role-based access
-- **companies** — Client companies with industry, contact info, and address
-- **contacts** — Individual contacts linked to companies via foreign key
+---
 
 ## API Endpoints
 
-### Authentication
+### Authentication (Public)
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | /api/auth/register | Register new user |
-| POST | /api/auth/login | Login and receive JWT |
+| POST | `/api/auth/register` | Register new user (default role: operator) |
+| POST | `/api/auth/login` | Login and receive JWT token |
 
 ### Companies (Protected)
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | /api/companies | Get all companies |
-| GET | /api/companies/:id | Get single company |
-| POST | /api/companies | Create company |
-| PUT | /api/companies/:id | Update company |
-| DELETE | /api/companies/:id | Delete company |
+| GET | `/api/companies?page=1&limit=10&search=&sortBy=name&sortOrder=asc` | List companies (paginated, searchable, sortable) |
+| GET | `/api/companies/all` | List all companies (for dropdowns) |
+| GET | `/api/companies/:id` | Get single company |
+| POST | `/api/companies` | Create company |
+| PUT | `/api/companies/:id` | Update company |
+| DELETE | `/api/companies/:id` | Delete company (admin only) |
 
 ### Contacts (Protected)
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | /api/contacts | Get all contacts with company name |
-| GET | /api/contacts/:id | Get single contact |
-| POST | /api/contacts | Create contact |
-| PUT | /api/contacts/:id | Update contact |
-| DELETE | /api/contacts/:id | Delete contact |
+| GET | `/api/contacts?page=1&limit=10&search=&sortBy=first_name&sortOrder=asc` | List contacts (paginated, searchable, sortable) |
+| GET | `/api/contacts/:id` | Get single contact |
+| POST | `/api/contacts` | Create contact |
+| PUT | `/api/contacts/:id` | Update contact |
+| DELETE | `/api/contacts/:id` | Delete contact (admin only) |
 
-## Getting Started
+### Users (Admin Only)
 
-### Prerequisites
-- Node.js (v18+)
-- PostgreSQL (v14+)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/users` | List all users |
+| PUT | `/api/users/:id/role` | Change user role |
+| DELETE | `/api/users/:id` | Delete user |
 
-### 1. Clone the repository
-```bash
-git clone https://github.com/DavideB96/crm-project.git
-cd crm-project
-```
+---
 
-### 2. Setup the database
-```bash
-psql -U postgres
-CREATE DATABASE crm_db;
-\c crm_db
-```
+## Database Schema
 
-Then create the tables:
 ```sql
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
@@ -140,6 +159,28 @@ CREATE TABLE contacts (
 );
 ```
 
+---
+
+## Getting Started
+
+### Prerequisites
+- Node.js (v18+)
+- PostgreSQL (v14+)
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/DavideB96/crm-project.git
+cd crm-project
+```
+
+### 2. Setup the database
+```bash
+psql -U postgres
+CREATE DATABASE crm_db;
+\c crm_db
+```
+Then run the SQL from the Database Schema section above.
+
 ### 3. Setup the backend
 ```bash
 cd server
@@ -155,6 +196,7 @@ DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=crm_db
 JWT_SECRET=your_secret_key
+NODE_ENV=development
 ```
 
 Start the server:
@@ -171,16 +213,24 @@ npm run dev
 
 The app will be running at `http://localhost:5173`
 
+> **Note:** For local development, update the `baseURL` in `client/src/services/api.js` to `http://localhost:5000/api`
+
+---
+
 ## What I Learned
 
-- Building REST APIs with Express and PostgreSQL
-- JWT authentication flow (registration, login, protected routes)
-- React state management with hooks (useState, useEffect)
-- Axios interceptors for automatic token handling
-- Responsive design with Tailwind CSS
-- Database design with relational tables and foreign keys
-- Full-stack architecture with separate client/server structure
+- Designing and consuming REST APIs with Express and PostgreSQL
+- JWT authentication flow with role-based authorization middleware
+- Server-side pagination, search (ILIKE), and sorting with SQL injection prevention (allowlist pattern)
+- React state management with hooks (useState, useEffect, useCallback)
+- Axios interceptors for automatic token injection and expiration handling
+- Responsive design patterns: table ↔ card view switching with Tailwind CSS breakpoints
+- Debouncing user input for optimized API calls
+- Express route ordering: named routes before parameterized routes
+- Full-stack deployment pipeline: Vercel (frontend) + Render (backend + PostgreSQL)
+
+---
 
 ## Author
 
-**Davide** — Career changer from contact center operations to web development, bringing real-world business process knowledge into software development.
+**Davide** — Career changer from contact center operations (7 years) to web development, bringing real-world business process knowledge into software development.
