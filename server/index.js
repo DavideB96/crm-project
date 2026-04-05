@@ -17,6 +17,7 @@ app.use('/api/auth', require('./routes/auth'));
 // Rotte protette (token richiesto)
 app.use('/api/companies', authMiddleware, require('./routes/companies'));
 app.use('/api/contacts', authMiddleware, require('./routes/contacts'));
+app.use('/api/users', authMiddleware, require('./routes/users'));
 
 // Rotta di test
 app.get('/api/test', (req, res) => {

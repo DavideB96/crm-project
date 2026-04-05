@@ -17,17 +17,15 @@ function Navbar() {
   const isActive = (path) => location.pathname === path;
 
   const linkClass = (path) =>
-    `px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-      isActive(path)
-        ? 'bg-slate-700 text-white'
-        : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+    `px-3 py-2 rounded-lg text-sm font-medium transition-all ${isActive(path)
+      ? 'bg-slate-700 text-white'
+      : 'text-slate-300 hover:bg-slate-700 hover:text-white'
     }`;
 
   const mobileLinkClass = (path) =>
-    `block px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-      isActive(path)
-        ? 'bg-slate-700 text-white'
-        : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+    `block px-3 py-2 rounded-lg text-sm font-medium transition-all ${isActive(path)
+      ? 'bg-slate-700 text-white'
+      : 'text-slate-300 hover:bg-slate-700 hover:text-white'
     }`;
 
   return (
@@ -51,6 +49,11 @@ function Navbar() {
               <Link to="/contacts" className={linkClass('/contacts')}>
                 Contacts
               </Link>
+              {user?.role === 'admin' && (
+                <Link to="/admin" className={linkClass('/admin')}>
+                  Admin
+                </Link>
+              )}
             </div>
           </div>
 
@@ -101,6 +104,11 @@ function Navbar() {
               <Link to="/contacts" onClick={() => setMenuOpen(false)} className={mobileLinkClass('/contacts')}>
                 Contacts
               </Link>
+              {user?.role === 'admin' && (
+                <Link to="/admin" onClick={() => setMenuOpen(false)} className={mobileLinkClass('/admin')}>
+                  Admin
+                </Link>
+              )}
               <div className="border-t border-slate-700 pt-3 mt-3 flex items-center justify-between px-3">
                 <div className="flex items-center space-x-2">
                   <div className="w-8 h-8 bg-slate-600 rounded-full flex items-center justify-center">

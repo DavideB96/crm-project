@@ -8,6 +8,7 @@ import Navbar from './components/navbar';
 import ContactDetail from './pages/ContactDetail';
 import Footer from './components/Footer';
 import CompanyDetail from './pages/CompanyDetail';
+import AdminPanel from './pages/AdminPanel';
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -45,6 +46,9 @@ function App() {
         } />
         <Route path="/companies/:id" element={
           <ProtectedRoute><CompanyDetail /></ProtectedRoute>
+        } />
+        <Route path="/admin" element={
+          <ProtectedRoute><AdminPanel /></ProtectedRoute>
         } />
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
